@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyFlow ✨ — Your Personal Study Manager</title>
+  <meta name="description"
+    content="A premium personal study management system with motivation, Pomodoro timer, tasks, notes, and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- Particle canvas -->
+  <canvas id="bg-canvas"></canvas>
+  <!-- Background floating orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- Welcome Modal -->
+  <div class="modal-overlay" id="welcome-modal">
+    <div class="modal-card animate-scale-in">
+      <div class="modal-emoji">🎓</div>
+      <h2 class="modal-title">Welcome to StudyFlow!</h2>
+      <p class="modal-sub">Your personal study companion. What should we call you?</p>
+      <input type="text" id="user-name-input" class="input-field" placeholder="Your name..." maxlength="20" />
+      <button class="btn-primary btn-full" onclick="saveUserName()">Let's Get Started! 🚀</button>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-glyph">✨</span>
+      <span class="logo-text">StudyFlow</span>
+    </div>
+    <ul class="nav-list">
+      <li><a href="#" class="nav-link active" data-page="dashboard"><span class="ni">🏠</span><span
+            class="nl">Dashboard</span></a></li>
+      <li><a href="#" class="nav-link" data-page="tasks"><span class="ni">✅</span><span class="nl">Tasks</span><span
+            class="badge" id="nav-badge">0</span></a></li>
+      <li><a href="#" class="nav-link" data-page="timer"><span class="ni">⏱️</span><span class="nl">Focus
+            Timer</span></a></li>
+      <li><a href="#" class="nav-link" data-page="subjects"><span class="ni">📖</span><span
+            class="nl">Subjects</span></a></li>
+      <li><a href="#" class="nav-link" data-page="notes"><span class="ni">📝</span><span class="nl">Notes</span></a>
+      </li>
+      <li><a href="#" class="nav-link" data-page="quotes"><span class="ni">💬</span><span
+            class="nl">Inspiration</span></a></li>
+      <li><a href="#" class="nav-link" data-page="stats"><span class="ni">📊</span><span class="nl">My
+            Progress</span></a></li>
+    </ul>
+    <div class="sidebar-streak">
+      <span class="streak-fire">🔥</span>
+      <div>
+        <div class="streak-num" id="sb-streak">0</div>
+        <div class="streak-lbl">day streak</div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hamburger -->
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </button>
+
+  <!-- Main Content -->
+  <main class="main" id="main">
+
+    <!-- ===== DASHBOARD ===== -->
+    <section class="page active" id="page-dashboard">
+      <div class="page-hdr">
+        <div>
+          <h1 class="greeting" id="greeting">Good Morning! 👋</h1>
+          <p class="date-str" id="date-str">Loading...</p>
+        </div>
+        <div class="clock" id="clock">00:00:00</div>
+      </div>
+
+      <!-- Daily Quote Hero -->
+      <div class="quote-hero glass animate-fade-up">
+        <div class="qh-orb"></div>
+        <div class="qh-body">
+          <span class="qh-mark">❝</span>
+          <p class="qh-text" id="dq-text">Loading your daily inspiration...</p>
+          <p class="qh-author" id="dq-author">— ...</p>
+          <button class="btn-ghost" id="new-quote-btn" onclick="refreshDailyQuote()">🔄 New Quote</button>
+        </div>
+        <div class="qh-float-emojis" id="qh-floats"></div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="stats-row">
+        <div class="stat-card glass animate-fade-up" style="--d:0.1s">
+          <span class="sc-icon">✅</span>
+          <div>
+            <div class="sc-val" id="sc-tasks">0</div>
+            <div class="sc-lbl">Tasks Done</div>
+          </div>
+          <div class="sc-ring"></div>
+        </div>
+        <div class="stat-card glass animate-fade-up" style="--d:0.2s">
+          <span class="sc-icon">🔥</span>
+          <div>
+            <div class="sc-val" id="sc-streak">0</div>
+            <div class="sc-lbl">Day Streak</div>
+          </div>
+          <div class="sc-ring"></div>
+        </div>
+        <div class="stat-card glass animate-fade-up" style="--d:0.3s">
+          <span class="sc-icon">📚</span>
+          <div>
+            <div class="sc-val" id="sc-subjects">0</div>
+            <div class="sc-lbl">Subjects</div>
+          </div>
+          <div class="sc-ring"></div>
+        </div>
+        <div class="stat-card glass animate-fade-up" style="--d:0.4s">
+          <span class="sc-icon">⏱️</span>
+          <div>
+            <div class="sc-val" id="sc-sessions">0</div>
+            <div class="sc-lbl">Focus Sessions</div>
+          </div>
+          <div class="sc-ring"></div>
+        </div>
+      </div>
+
+      <!-- Tasks Preview + Quick Actions -->
+      <div class="two-col">
+        <div class="glass animate-fade-up" style="--d:0.5s">
+          <h3 class="card-title">📋 Today's Tasks</h3>
+          <div id="dash-tasks"></div>
+          <button class="btn-outline mt-1" onclick="switchPage('tasks')">View All Tasks →</button>
+        </div>
+        <div class="glass animate-fade-up" style="--d:0.6s">
+          <h3 class="card-title">⚡ Quick Actions</h3>
+          <div class="quick-grid">
+            <button class="qbtn" onclick="switchPage('timer')"><span class="qbi">⏱️</span><span>Start
+                Focus</span></button>
+            <button class="qbtn" onclick="switchPage('tasks')"><span class="qbi">➕</span><span>Add Task</span></button>
+            <button class="qbtn" onclick="switchPage('notes')"><span class="qbi">📝</span><span>Quick
+                Note</span></button>
+            <button class="qbtn" onclick="switchPage('quotes')"><span class="qbi">💬</span><span>Get
+                Inspired</span></button>
+            <button class="qbtn" onclick="switchPage('subjects')"><span
+                class="qbi">📖</span><span>Subjects</span></button>
+            <button class="qbtn" onclick="switchPage('stats')"><span class="qbi">📊</span><span>My
+                Progress</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TASKS ===== -->
+    <section class="page" id="page-tasks">
+      <div class="page-hdr">
+        <h1 class="page-title">✅ My Study Tasks</h1>
+      </div>
+
+      <div class="glass animate-fade-up">
+        <h3 class="card-title">➕ Add New Task</h3>
+        <div class="form-g4">
+          <input type="text" id="task-title" class="input-field" placeholder="What do you need to study?" />
+          <select id="task-subject" class="input-field"></select>
+          <select id="task-priority" class="input-field">
+            <option value="low">🟢 Low</option>
+            <option value="medium" selected>🟡 Medium</option>
+            <option value="high">🔴 High</option>
+          </select>
+          <input type="date" id="task-due" class="input-field" />
+        </div>
+        <button class="btn-primary mt-1" onclick="addTask()">✨ Add Task</button>
+      </div>
+
+      <div class="glass animate-fade-up task-toolbar">
+        <div class="pills" id="task-filter-pills">
+          <button class="pill active" data-tf="all">All</button>
+          <button class="pill" data-tf="pending">Pending</button>
+          <button class="pill" data-tf="done">Done</button>
+          <button class="pill" data-tf="high">🔴 High</button>
+          <button class="pill" data-tf="today">Due Today</button>
+        </div>
+        <div class="prog-wrap">
+          <span id="task-prog-txt">0 / 0</span>
+          <div class="prog-track">
+            <div class="prog-fill" id="task-prog-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tasks-list"></div>
+    </section>
+
+    <!-- ===== TIMER ===== -->
+    <section class="page" id="page-timer">
+      <div class="page-hdr">
+        <h1 class="page-title">⏱️ Pomodoro Focus Timer</h1>
+      </div>
+
+      <div class="timer-layout">
+        <div class="glass timer-main animate-fade-up">
+          <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="focus" data-mins="25">🎯 Focus</button>
+            <button class="mode-tab" data-mode="short" data-mins="5">☕ Short Break</button>
+            <button class="mode-tab" data-mode="long" data-mins="15">🛋️ Long Break</button>
+          </div>
+          <div class="timer-ring-wrap">
+            <svg class="timer-svg" viewBox="0 0 220 220">
+              <defs>
+                <linearGradient id="tg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#7c6bff" />
+                  <stop offset="100%" style="stop-color:#3dd9d9" />
+                </linearGradient>
+                <filter id="glow-filter">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <circle class="t-track" cx="110" cy="110" r="95" />
+              <circle class="t-ring" id="timer-ring" cx="110" cy="110" r="95" stroke-dasharray="596.9"
+                stroke-dashoffset="0" transform="rotate(-90 110 110)" filter="url(#glow-filter)" />
+            </svg>
+            <div class="timer-center">
+              <div class="timer-digits" id="timer-digits">25:00</div>
+              <div class="timer-mode-lbl" id="timer-mode-lbl">Focus Time</div>
+            </div>
+          </div>
+          <div class="timer-btns">
+            <button class="btn-start" id="btn-start" onclick="toggleTimer()">▶ Start</button>
+            <button class="btn-reset" onclick="resetTimer()">↺ Reset</button>
+          </div>
+          <div class="pom-dots" id="pom-dots">
+            <span class="pd" data-i="0"></span><span class="pd" data-i="1"></span>
+            <span class="pd" data-i="2"></span><span class="pd" data-i="3"></span>
+          </div>
+          <p class="pom-info">Session <span id="pom-num">1</span> of 4</p>
+        </div>
+
+        <div class="timer-side">
+          <div class="glass animate-fade-up" style="--d:0.2s">
+            <h3 class="card-title">💡 Focus Thought</h3>
+            <p class="focus-q" id="focus-q"></p>
+          </div>
+          <div class="glass animate-fade-up" style="--d:0.3s">
+            <h3 class="card-title">📈 Today's Stats</h3>
+            <div class="big-s"><span class="big-n" id="tod-sess">0</span><span class="big-l">sessions done</span></div>
+            <div class="big-s"><span class="big-n" id="tod-mins">0</span><span class="big-l">minutes focused</span>
+            </div>
+          </div>
+          <div class="glass animate-fade-up" style="--d:0.4s">
+            <h3 class="card-title">🧠 Pomodoro Tips</h3>
+            <ul class="tips">
+              <li>🎯 Work on ONE thing at a time</li>
+              <li>📵 Silence your phone</li>
+              <li>🚫 Close social media tabs</li>
+              <li>💧 Drink water on breaks</li>
+              <li>🚶 Walk around on long breaks</li>
+              <li>📋 Review what you learned after</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SUBJECTS ===== -->
+    <section class="page" id="page-subjects">
+      <div class="page-hdr">
+        <h1 class="page-title">📖 My Subjects</h1>
+      </div>
+
+      <div class="glass animate-fade-up">
+        <h3 class="card-title">➕ Add Subject</h3>
+        <div class="form-g4">
+          <input type="text" id="subj-name" class="input-field" placeholder="Subject name..." />
+          <select id="subj-icon" class="input-field">
+            <option value="📚">📚 General</option>
+            <option value="🔢">🔢 Mathematics</option>
+            <option value="⚗️">⚗️ Science</option>
+            <option value="📖">📖 English</option>
+            <option value="🌍">🌍 Geography</option>
+            <option value="🏛️">🏛️ History</option>
+            <option value="💻">💻 Computer Science</option>
+            <option value="🧬">🧬 Biology</option>
+            <option value="⚡">⚡ Physics</option>
+            <option value="🧪">🧪 Chemistry</option>
+            <option value="⚖️">⚖️ Economics</option>
+            <option value="🎨">🎨 Arts</option>
+          </select>
+          <input type="color" id="subj-color" class="clr-pick" value="#7c6bff" title="Subject color" />
+          <button class="btn-primary" onclick="addSubject()">Add Subject</button>
+        </div>
+      </div>
+
+      <div class="subjects-grid" id="subjects-grid"></div>
+    </section>
+
+    <!-- ===== NOTES ===== -->
+    <section class="page" id="page-notes">
+      <div class="page-hdr">
+        <h1 class="page-title">📝 My Notes</h1>
+      </div>
+
+      <div class="glass animate-fade-up">
+        <h3 class="card-title">✏️ New Note</h3>
+        <input type="text" id="note-title" class="input-field mb-1" placeholder="Note title..." />
+        <textarea id="note-body" class="textarea-field" rows="4" placeholder="Write your note here..."></textarea>
+        <div class="note-footer mt-1">
+          <div class="clr-row">
+            <span>Color:</span>
+            <div id="note-clr-opts">
+              <button class="cc active" data-c="#7c6bff" style="background:#7c6bff"></button>
+              <button class="cc" data-c="#ff6b9d" style="background:#ff6b9d"></button>
+              <button class="cc" data-c="#ffd93d" style="background:#ffd93d"></button>
+              <button class="cc" data-c="#6bcb77" style="background:#6bcb77"></button>
+              <button class="cc" data-c="#4d96ff" style="background:#4d96ff"></button>
+              <button class="cc" data-c="#ff9f43" style="background:#ff9f43"></button>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="addNote()">Save Note 📌</button>
+        </div>
+      </div>
+
+      <div class="notes-grid" id="notes-grid"></div>
+    </section>
+
+    <!-- ===== QUOTES ===== -->
+    <section class="page" id="page-quotes">
+      <div class="page-hdr">
+        <h1 class="page-title">💬 Inspiration Wall</h1>
+        <button class="btn-primary" onclick="randomFeatured()">🎲 Surprise Me!</button>
+      </div>
+
+      <div class="feat-quote glass animate-fade-up">
+        <div class="fq-orb"></div>
+        <div class="fq-mark">❝</div>
+        <p class="fq-text" id="fq-text">Click Surprise Me! for a random quote.</p>
+        <p class="fq-auth" id="fq-auth">—</p>
+      </div>
+
+      <div class="glass animate-fade-up">
+        <div class="pills" id="quote-pills">
+          <button class="pill active" data-qc="all">✨ All</button>
+          <button class="pill" data-qc="success">🏆 Success</button>
+          <button class="pill" data-qc="learning">📚 Learning</button>
+          <button class="pill" data-qc="perseverance">💪 Perseverance</button>
+          <button class="pill" data-qc="mindset">🧠 Mindset</button>
+          <button class="pill" data-qc="focus">🎯 Focus</button>
+        </div>
+      </div>
+
+      <div class="quotes-grid" id="quotes-grid"></div>
+    </section>
+
+    <!-- ===== STATS ===== -->
+    <section class="page" id="page-stats">
+      <div class="page-hdr">
+        <h1 class="page-title">📊 My Progress</h1>
+      </div>
+
+      <div class="stats-page-grid">
+        <div class="glass animate-fade-up">
+          <h3 class="card-title">📅 This Week's Focus Sessions</h3>
+          <div class="week-chart" id="week-chart"></div>
+          <div class="week-days" id="week-days"></div>
+        </div>
+
+        <div class="glass animate-fade-up" style="--d:0.2s">
+          <h3 class="card-title">🏆 Achievements</h3>
+          <div class="badges" id="badges"></div>
+        </div>
+
+        <div class="glass animate-fade-up full-col" style="--d:0.3s">
+          <h3 class="card-title">📚 Subject Progress</h3>
+          <div id="subj-prog-list"></div>
+        </div>
+
+        <div class="glass animate-fade-up" style="--d:0.4s">
+          <h3 class="card-title">✅ Task Overview</h3>
+          <div id="task-overview"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+  <!-- Confetti wrapper -->
+  <div id="confetti-wrap"></div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
